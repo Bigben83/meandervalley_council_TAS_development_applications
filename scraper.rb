@@ -24,9 +24,6 @@ end
 # Step 2: Parse the page content using Nokogiri
 doc = Nokogiri::HTML(page_html)
 
-# Print out a snippet of the HTML for debugging
-logger.info("HTML Content snippet: #{doc.to_html[0..500]}")
-
 # Step 3: Initialize the SQLite database
 db = SQLite3::Database.new "data.sqlite"
 
@@ -65,11 +62,19 @@ date_scraped = ''
 
 # Extract data for each row
 doc.css('table tbody tr').each_with_index do |row, index|
+  logger.info("Extracting data for row #{index + 1}")
+
   council_reference = row.at_css('a') ? row.at_css('a').text.strip : "No reference"
   applicant = row.at_css('strong:contains("Applicant:")') ? row.at_css('strong:contains("Applicant:")').next.text.strip : "No applicant"
   address = row.at_css('strong:contains("Property:")') ? row.at_css('strong:contains("Property:")').next.text.strip : "No address"
   stage_description = row.at_css('strong:contains("Proposal:")') ? row.at_css('strong:contains("Proposal:")').next.text.strip : "No description"
   on_notice_to = row.at_css('strong:contains("Closes:")') ? row.at_css('strong:contains("Closes:")').next.text.strip : "No closing date"
+
+  logger.info("Council Reference: #{council_reference}")
+  logger.info("Applicant: #{applicant}")
+  logger.info("Address: #{address}")
+  logger.info("Stage Description: #{stage_description}")
+  logger.info("On Notice To: #{on_notice_to}")
 
   date_scraped = Date.today.to_s
 
@@ -80,7 +85,7 @@ doc.css('table tbody tr').each_with_index do |row, index|
   document_description = row.at_css('a')['href'] || ''
 
   # Log the extracted data for debugging purposes
-  logger.info("Extracted Data: #{council_reference}, #{address}, #{stage_description}, #{on_notice_to}, #{date_received}")
+  logger.info("Extracted Data: #{council_reference}, #{address}, #{stage_description}, #{on_notice_to}, #{date_received}, #{document_description}")
 
   # Step 6: Ensure the entry does not already exist before inserting
   existing_entry = db.execute("SELECT * FROM meander_valley WHERE council_reference = ?", council_reference )
