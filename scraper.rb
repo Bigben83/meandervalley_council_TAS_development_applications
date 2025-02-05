@@ -65,7 +65,7 @@ document_description = ''
 date_scraped = ''
 
 # Extract data for each row
-doc.css('table tbody tr').each_with_index do |row, index|
+section.css('table tbody tr').each_with_index do |row, index|
   logger.info("Extracting data for row #{index + 1}")
 
   council_reference = row.at_css('a') ? row.at_css('a').text.strip : "No reference"
