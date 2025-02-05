@@ -24,12 +24,12 @@ end
 # Step 2: Parse the page content using Nokogiri
 doc = Nokogiri::HTML(page_html)
 
-# Open a new SQLite database (or connect to existing one)
-db = SQLite3::Database.new 'meander_valley_council.db'
+# Step 3: Initialize the SQLite database
+db = SQLite3::Database.new "data.sqlite"
 
-# Create table if not exists
+# Create the table if it doesn't exist
 db.execute <<-SQL
-  CREATE TABLE IF NOT EXISTS meander_valley_council (
+  CREATE TABLE IF NOT EXISTS meander_valley (
 id INTEGER PRIMARY KEY,
     description TEXT,
     date_scraped TEXT,
@@ -76,11 +76,24 @@ doc.css('table tbody tr').each_with_index do |row, index|
   # Extract the document description from href links
   document_description = row.at_css('a')['href'] || ''
 
+  # Log the extracted data for debugging purposes
+  logger.info("Extracted Data: #{council_reference}, #{description}, #{document_description}, #{council_reference}, #{date_received}, #{on_notice_to}, #{title_reference}")
+
+  # Step 6: Ensure the entry does not already exist before inserting
+  existing_entry = db.execute("SELECT * FROM meander_valley WHERE council_reference = ?", council_reference )
+
+  if existing_entry.empty? # Only insert if the entry doesn't already exist
   # Save data to the database
-  db.execute("INSERT INTO meander_valley_council 
+  db.execute("INSERT INTO meander_valley 
     (description, date_scraped, date_received, on_notice_to, address, council_reference, applicant, owner, stage_description, stage_status, document_description, title_reference)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
     [document_description, date_scraped, date_received, on_notice_to, address, council_reference, applicant, nil, stage_description, nil, document_description, nil])
 
-  puts "Extracted Data for Application ##{index+1}: #{council_reference} - #{applicant}"
+    logger.info("Data for #{council_reference} saved to database.")
+    else
+      logger.info("Duplicate entry for application #{council_reference} found. Skipping insertion.")
+    end
 end
+
+# Finish
+logger.info("Data has been successfully inserted into the database.")
