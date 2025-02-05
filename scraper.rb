@@ -24,9 +24,21 @@ end
 # Step 2: Parse the page content using Nokogiri
 doc = Nokogiri::HTML(page_html)
 
-# Log the HTML of the entire section to see if we're selecting the right part
-section = doc.at_css('section.copy-block.px-5')
-logger.info("HTML content in the targeted section: #{section}")
+# Extract the table from the section
+table = doc.at_css('.copy-block.px-5 table') # We're targeting the table inside the targeted section
+if table
+  logger.info("Table found.")
+else
+  logger.error("Table not found.")
+  exit
+end
+
+# Log the full HTML of the table for verification
+logger.info("Table HTML: #{table.to_html}")
+
+# Log the rows inside the table
+rows = table.css('tr')
+logger.info("Found #{rows.count} rows in the table.")
 
 # Step 3: Initialize the SQLite database
 db = SQLite3::Database.new "data.sqlite"
@@ -64,17 +76,13 @@ stage_status = ''
 document_description = ''
 date_scraped = ''
 
-# Log all rows in the table for debugging
-table_rows = section.css('table tr') # Select all rows in the table
-logger.info("Table rows: #{table_rows.count}")
-
-# Extract data for each row within the section
-table_rows.each_with_index do |row, index|
+# Extract data for each row inside the table
+rows.each_with_index do |row, index|
+  # Log each row for inspection
   logger.info("Extracting data for row #{index + 1}")
-  
-  # Log the raw HTML of each row for inspection
   logger.info("Row HTML: #{row.to_html}")
 
+  # Extract the relevant data from each row
   council_reference = row.at_css('a') ? row.at_css('a').text.strip : "No reference"
   applicant = row.at_css('strong:contains("Applicant:")') ? row.at_css('strong:contains("Applicant:")').next.text.strip : "No applicant"
   address = row.at_css('strong:contains("Property:")') ? row.at_css('strong:contains("Property:")').next.text.strip : "No address"
@@ -93,7 +101,7 @@ table_rows.each_with_index do |row, index|
   date_received = Date.strptime(on_notice_to, "%A %d %B %Y").to_s rescue "Invalid date"
 
   # Extract the document description from href links
-  document_description = row.at_css('a')['href'] || ''
+  document_description = row.at_css('a') ? row.at_css('a')['href'] : ''
 
   # Log the extracted data for debugging purposes
   logger.info("Extracted Data: #{council_reference}, #{address}, #{stage_description}, #{on_notice_to}, #{date_received}, #{document_description}")
