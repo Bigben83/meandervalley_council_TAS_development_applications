@@ -24,6 +24,10 @@ end
 # Step 2: Parse the page content using Nokogiri
 doc = Nokogiri::HTML(page_html)
 
+# Log the HTML of the section to see if we're targeting the right part
+section = doc.at_css('section.copy-block.px-5')
+logger.info("HTML content in the targeted section: #{section}")
+
 # Step 3: Initialize the SQLite database
 db = SQLite3::Database.new "data.sqlite"
 
