@@ -30,7 +30,7 @@ db = SQLite3::Database.new "data.sqlite"
 # Create the table if it doesn't exist
 db.execute <<-SQL
   CREATE TABLE IF NOT EXISTS meander_valley (
-id INTEGER PRIMARY KEY,
+    id INTEGER PRIMARY KEY,
     description TEXT,
     date_scraped TEXT,
     date_received TEXT,
@@ -62,37 +62,37 @@ date_scraped = ''
 
 # Extract data for each row
 doc.css('table tbody tr').each_with_index do |row, index|
-  council_reference = row.at_css('a').text.strip
-  applicant = row.at_css('strong:contains("Applicant:")').next.text.strip
-  address = row.at_css('strong:contains("Property:")').next.text.strip
-  stage_description = row.at_css('strong:contains("Proposal:")').next.text.strip
-  on_notice_to = row.at_css('strong:contains("Closes:")').next.text.strip
+  council_reference = row.at_css('a') ? row.at_css('a').text.strip : "No reference"
+  applicant = row.at_css('strong:contains("Applicant:")') ? row.at_css('strong:contains("Applicant:")').next.text.strip : "No applicant"
+  address = row.at_css('strong:contains("Property:")') ? row.at_css('strong:contains("Property:")').next.text.strip : "No address"
+  stage_description = row.at_css('strong:contains("Proposal:")') ? row.at_css('strong:contains("Proposal:")').next.text.strip : "No description"
+  on_notice_to = row.at_css('strong:contains("Closes:")') ? row.at_css('strong:contains("Closes:")').next.text.strip : "No closing date"
 
   date_scraped = Date.today.to_s
 
   # Format the date in ISO 8601 format
-  date_received = Date.strptime(on_notice_to, "%A %d %B %Y").to_s
+  date_received = Date.strptime(on_notice_to, "%A %d %B %Y").to_s rescue "Invalid date"
 
   # Extract the document description from href links
   document_description = row.at_css('a')['href'] || ''
 
   # Log the extracted data for debugging purposes
-  logger.info("Extracted Data: #{council_reference}, #{description}, #{document_description}, #{council_reference}, #{date_received}, #{on_notice_to}, #{title_reference}")
+  logger.info("Extracted Data: #{council_reference}, #{address}, #{stage_description}, #{on_notice_to}, #{date_received}")
 
   # Step 6: Ensure the entry does not already exist before inserting
   existing_entry = db.execute("SELECT * FROM meander_valley WHERE council_reference = ?", council_reference )
 
   if existing_entry.empty? # Only insert if the entry doesn't already exist
-  # Save data to the database
-  db.execute("INSERT INTO meander_valley 
-    (description, date_scraped, date_received, on_notice_to, address, council_reference, applicant, owner, stage_description, stage_status, document_description, title_reference)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-    [document_description, date_scraped, date_received, on_notice_to, address, council_reference, applicant, nil, stage_description, nil, document_description, nil])
+    # Save data to the database
+    db.execute("INSERT INTO meander_valley 
+      (description, date_scraped, date_received, on_notice_to, address, council_reference, applicant, owner, stage_description, stage_status, document_description, title_reference)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+      [document_description, date_scraped, date_received, on_notice_to, address, council_reference, applicant, nil, stage_description, nil, document_description, nil])
 
     logger.info("Data for #{council_reference} saved to database.")
-    else
-      logger.info("Duplicate entry for application #{council_reference} found. Skipping insertion.")
-    end
+  else
+    logger.info("Duplicate entry for application #{council_reference} found. Skipping insertion.")
+  end
 end
 
 # Finish
