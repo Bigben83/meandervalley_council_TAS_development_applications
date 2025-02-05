@@ -24,23 +24,35 @@ end
 # Step 2: Parse the page content using Nokogiri
 doc = Nokogiri::HTML(page_html)
 
-# Extract the table from the section
-table = doc.at_css('.copy-block.px-5 table') # We're targeting the table inside the targeted section
-if table
-  logger.info("Table found.")
+# Step 3: Find the targeted section that contains the table
+section = doc.at_css('.copy-block.px-5')
+if section
+  logger.info("Section with table found.")
 else
-  logger.error("Table not found.")
+  logger.error("Section with class 'copy-block px-5' not found.")
+  exit
+end
+
+# Log the full HTML of the section to inspect its structure
+logger.info("Section HTML: #{section.to_html}")
+
+# Step 4: Try a more general approach to find the table
+table = section.at_css('table')
+if table
+  logger.info("Table found inside the section.")
+else
+  logger.error("Table inside the section not found.")
   exit
 end
 
 # Log the full HTML of the table for verification
 logger.info("Table HTML: #{table.to_html}")
 
-# Log the rows inside the table
+# Step 5: Log the rows inside the table
 rows = table.css('tr')
 logger.info("Found #{rows.count} rows in the table.")
 
-# Step 3: Initialize the SQLite database
+# Step 6: Initialize the SQLite database
 db = SQLite3::Database.new "data.sqlite"
 
 # Create the table if it doesn't exist
