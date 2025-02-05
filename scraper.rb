@@ -24,7 +24,7 @@ end
 # Step 2: Parse the page content using Nokogiri
 doc = Nokogiri::HTML(page_html)
 
-# Log the HTML of the section to see if we're targeting the right part
+# Log the HTML of the entire section to see if we're selecting the right part
 section = doc.at_css('section.copy-block.px-5')
 logger.info("HTML content in the targeted section: #{section}")
 
@@ -64,9 +64,16 @@ stage_status = ''
 document_description = ''
 date_scraped = ''
 
-# Extract data for each row
-section.css('table tbody tr').each_with_index do |row, index|
+# Log all rows in the table for debugging
+table_rows = section.css('table tr') # Select all rows in the table
+logger.info("Table rows: #{table_rows.count}")
+
+# Extract data for each row within the section
+table_rows.each_with_index do |row, index|
   logger.info("Extracting data for row #{index + 1}")
+  
+  # Log the raw HTML of each row for inspection
+  logger.info("Row HTML: #{row.to_html}")
 
   council_reference = row.at_css('a') ? row.at_css('a').text.strip : "No reference"
   applicant = row.at_css('strong:contains("Applicant:")') ? row.at_css('strong:contains("Applicant:")').next.text.strip : "No applicant"
