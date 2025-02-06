@@ -11,6 +11,7 @@ logger = Logger.new(STDOUT)
 # Define the URL of the page
 url = 'https://www.meander.tas.gov.au/advertised-approved-planning-applications/'
 
+
 # Step 1: Fetch the page content
 begin
   logger.info("Fetching page content from: #{url}")
@@ -24,38 +25,8 @@ end
 # Step 2: Parse the page content using Nokogiri
 doc = Nokogiri::HTML(page_html)
 
-# Step 3: Find the targeted section that contains the table
-section = doc.at_css('.copy-block.px-5')
-if section
-  logger.info("Section with table found.")
-else
-  logger.error("Section with class 'copy-block px-5' not found.")
-  exit
-end
-
-# Step 4: Skip the first two <p> tags
-paragraphs = section.css('p')
-if paragraphs.count >= 2
-  logger.info("Skipping first two <p> tags.")
-  # Remove the first two <p> tags to avoid logging them
-  paragraphs[0..1].each(&:remove)
-end
-
-# Step 5: Find the table
-table = section.at_css('table')
-if table
-  logger.info("Table found inside the section.")
-else
-  logger.error("Table inside the section not found.")
-  exit
-end
-
-# Log the full HTML of the table for verification
-logger.info("Table HTML: #{table.to_html}")
-
-# Step 6: Log the rows inside the table
-rows = table.css('tr')
-logger.info("Found #{rows.count} rows in the table.")
+# Print out a snippet of the HTML for debugging
+logger.info("HTML Content snippet: #{doc.to_html}")
 
 # Step 7: Initialize the SQLite database
 db = SQLite3::Database.new "data.sqlite"
