@@ -33,10 +33,15 @@ else
   exit
 end
 
-# Log the full HTML of the section to inspect its structure
-logger.info("Section HTML: #{section.to_html}")
+# Step 4: Skip the first two <p> tags
+paragraphs = section.css('p')
+if paragraphs.count >= 2
+  logger.info("Skipping first two <p> tags.")
+  # Remove the first two <p> tags to avoid logging them
+  paragraphs[0..1].each(&:remove)
+end
 
-# Step 4: Try a more general approach to find the table
+# Step 5: Find the table
 table = section.at_css('table')
 if table
   logger.info("Table found inside the section.")
@@ -48,11 +53,11 @@ end
 # Log the full HTML of the table for verification
 logger.info("Table HTML: #{table.to_html}")
 
-# Step 5: Log the rows inside the table
+# Step 6: Log the rows inside the table
 rows = table.css('tr')
 logger.info("Found #{rows.count} rows in the table.")
 
-# Step 6: Initialize the SQLite database
+# Step 7: Initialize the SQLite database
 db = SQLite3::Database.new "data.sqlite"
 
 # Create the table if it doesn't exist
