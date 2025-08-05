@@ -23,7 +23,7 @@ doc = Nokogiri::HTML(page_html)
 db = SQLite3::Database.new "data.sqlite"
 
 db.execute <<-SQL
-  CREATE TABLE IF NOT EXISTS meander (
+  CREATE TABLE IF NOT EXISTS meander_valley (
     id INTEGER PRIMARY KEY,
     council_reference TEXT,
     applicant TEXT,
@@ -70,9 +70,9 @@ doc.css('table tbody tr').each do |row|
   logger.info("-----------------------------------")
 
   # Check if entry exists
-  existing_entry = db.execute("SELECT * FROM meander WHERE council_reference = ?", council_reference)
+  existing_entry = db.execute("SELECT * FROM meander_valley WHERE council_reference = ?", council_reference)
   if existing_entry.empty?
-    db.execute("INSERT INTO meander (council_reference, applicant, address, description, on_notice_to, document_url, date_scraped)
+    db.execute("INSERT INTO meander_valley (council_reference, applicant, address, description, on_notice_to, document_url, date_scraped)
                 VALUES (?, ?, ?, ?, ?, ?, ?)",
                 [council_reference, applicant, address, description, on_notice_to, document_url, date_scraped])
     logger.info("Data for #{council_reference} saved to database.")
